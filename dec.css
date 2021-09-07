@@ -1,0 +1,127 @@
+h1{
+  font-family: 'Caveat', cursive;
+  font-size: 70px;
+  margin: 0 auto 0 auto;
+  color: #C9D6DF;
+}
+p{
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+h2{
+  margin: 0;
+  padding-top: 30px;
+  color: #C9D6DF;
+  font-size: 50px;
+}
+
+h3{
+  color: #C9D6DF;
+  font-size: 30px;
+  padding-bottom: 20px;
+}
+
+body{
+  text-align: center;
+  margin: 0;
+
+  padding: 0;
+  background-color: grey;
+  font-family: 'PT Serif', serif;
+  font-size: 25px;
+  color: #F0F0F0;
+}
+.top-container{
+  background-color: #1E2022;
+  margin: 0;
+  height: 730px;
+}
+.top{
+ padding-top: 100px;
+}
+
+.moon{
+  width: 100px;
+  height: 100px;
+  right: 300px;
+  padding-top: 20px;
+}
+
+.star_1{
+  position: absolute;
+  left: 10px;
+  top: 20px;
+}
+
+.star_2{
+  position: absolute;
+  right: 10px;
+  bottom: 20px;
+}
+
+
+.person{
+  width: 20%;
+  border-radius: 100%;
+  padding-top: 50px;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-bottom: 50px;
+  float: left;
+
+}
+.profile{
+  line-height: 2;
+  text-align: left;
+  font-size: 23px;
+  padding-bottom: 50px;
+}
+
+.skill_1{
+  width: 22%;
+  float: right;
+  padding-right: 75px;
+  border-radius: 50%;
+  padding-left: 50px;
+}
+
+.skill-row{
+  text-align: left;
+  padding-left: 100px;
+  padding-top: 30px;
+  font-size: 20px;
+  line-height: 2;
+}
+
+.footer-link{
+  width: 5%;
+  ;
+}
+.bottom-container{
+  background-color: #1E2022;
+  color:#F0F0F0;
+  margin: 0;
+}
+
+
+#insta{
+  width: 2%;
+  padding-right: 40px;
+}
+#gmail{
+  width: 3%;
+  padding-right: 40px;
+}
+
+#linkedin{
+  width: 3%;
+  padding-right: 40px;
+}
+
+#a{
+  font-size: 20px;
+}
+
+#copyright{
+  font-size: 15px;
+}
