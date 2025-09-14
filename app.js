@@ -9,133 +9,94 @@ const grid      = document.getElementById("grid");
 const statusEl  = document.getElementById("status");
 const cardTpl   = document.getElementById("cardTpl");
 
-// Local cache to reduce flicker
 const cache = new Map();
 
 function setStatus(msg, isError=false){
   statusEl.textContent = msg;
-  statusEl.style.color = isError ? "var(--neg)" : "var(--muted)";
+  statusEl.className = isError ? "status error" : "status";
 }
 
-function classify(compound){
-  if (compound >  0.2) return "POSITIVE";
-  if (compound < -0.2) return "NEGATIVE";
-  return "NEUTRAL";
-}
-function widthFromCompound(c){ return Math.round(Math.abs(c) * 50); }
-function fmtDate(iso){
-  try{
-    return new Intl.DateTimeFormat(undefined, {
-      year:"numeric", month:"short", day:"2-digit",
-      hour:"2-digit", minute:"2-digit"
-    }).format(new Date(iso));
-  }catch{ return iso ?? ""; }
+function pct(v){ return Math.max(0, Math.min(100, Math.round(v*100))); }
+
+function vaderPN(compound){
+  const pos = (compound + 1) / 2;
+  return { pos, neg: 1 - pos };
 }
 
-function render(articles){
-  grid.innerHTML = "";
-  if(!Array.isArray(articles) || articles.length===0){
-    const empty = document.createElement("div");
-    empty.className = "status";
-    empty.textContent = "No articles found.";
-    grid.appendChild(empty);
-    return;
+function bertPN(label, score){
+  if (typeof score === "number") {
+    const pos = score;
+    return { pos, neg: 1 - pos };
   }
+  const isPos = String(label||"").toUpperCase().includes("POS");
+  const pos = isPos ? 0.9 : 0.1;
+  return { pos, neg: 1 - pos };
+}
+
+function renderArticles(articles){
+  grid.innerHTML = "";
   const frag = document.createDocumentFragment();
+
   for(const a of articles){
     const node = cardTpl.content.firstElementChild.cloneNode(true);
-    const title = node.querySelector(".title");
-    title.textContent = a.title || "(no title)";
-    title.href = a.url || "#";
+    const titleEl = node.querySelector(".title");
+    if(titleEl){
+      titleEl.textContent = a.title || "(no title)";
+      if(a.url) titleEl.href = a.url;
+    }
+    node.querySelector(".source").textContent = a.source || "";
+    node.querySelector(".time").textContent = a.publishedAt ? new Date(a.publishedAt).toLocaleString() : "";
 
-    node.querySelector(".source").textContent = a.source || "Unknown source";
-    node.querySelector(".date").textContent = fmtDate(a.publishedAt);
+    // VADER
+    const compound = (a.vader && typeof a.vader.compound === "number") ? a.vader.compound : 0;
+    const {pos: vPos, neg: vNeg} = vaderPN(compound);
+    node.querySelector(".pos-fill").style.width = pct(vPos) + "%";
+    node.querySelector(".neg-fill").style.width = pct(vNeg) + "%";
+    node.querySelector(".meter-val").textContent = `P: ${pct(vPos)}% · N: ${pct(vNeg)}%`;
 
-    const compound = Number(a?.vader?.compound ?? 0);
-    const sentiment = classify(compound);
-    const badge = node.querySelector(".badge.sentiment");
-    badge.textContent = sentiment;
-    badge.classList.add(sentiment);
-
-    const fill = node.querySelector(".meter-fill");
-    const w = widthFromCompound(compound);
-    fill.style.width = `${w}%`;
-    fill.style.left = "50%";
-    fill.style.transform = compound >= 0 ? "translateX(0)" : "translateX(-100%)";
-    fill.style.backgroundColor =
-      compound > 0.2 ? "var(--pos)" :
-      compound < -0.2 ? "var(--neg)" : "var(--neu)";
-    node.querySelector(".meter-val").textContent = compound.toFixed(3);
-
-    const dl = node.querySelector(".distil-label");
-    const ds = node.querySelector(".distil-score");
-    dl.textContent = a?.distilbert?.label ?? "PENDING";
-    const score = a?.distilbert?.score;
-    ds.textContent = (score !== null && score !== undefined) ? `(${Number(score).toFixed(3)})` : "";
+    // DistilBERT
+    const dl = a.distilbert || {};
+    const {pos: bPos, neg: bNeg} = bertPN(dl.label, dl.score);
+    node.querySelector(".bert-pos").style.width = pct(bPos) + "%";
+    node.querySelector(".bert-neg").style.width = pct(bNeg) + "%";
+    node.querySelector(".bert-val").textContent =
+      dl.label ? `P: ${pct(bPos)}% · N: ${pct(bNeg)}%` : "PENDING";
 
     frag.appendChild(node);
   }
   grid.appendChild(frag);
 }
 
-function key(country, search){
-  return JSON.stringify({country, search});
-}
-
 async function fetchArticles(){
-  const country = countryEl.value;
-  let search = searchEl.value.trim();
-
-  // Build request body (POST JSON)
-  const body = {};
-  if (search){
-    // Convert commas to " | " unless already contains pipe
-    if (search.includes(",") && !search.includes("|")){
-      search = search.split(",").map(s=>s.trim()).filter(Boolean).join(" | ");
-    }
-    body.search = search;
-  } else {
-    body.country = country;
-  }
-
-  const ck = key(country, search || "");
-  if (cache.has(ck)){
-    const cached = cache.get(ck);
-    render(cached);
-    setStatus(`Loaded ${cached.length} cached article(s).`);
-    return;
-  }
-
-  setStatus("Fetching articles…");
-  fetchBtn.disabled = true;
-
   try{
-    const res = await fetch(LAMBDA_URL, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body),
-    });
-
-    if(!res.ok){
-      throw new Error(`HTTP ${res.status}`);
+    fetchBtn.disabled = true;
+    setStatus("Loading...");
+    const params = new URLSearchParams();
+    const country = (countryEl?.value || "us").toLowerCase();
+    if(country){ params.set("country", country); }
+    const q = (searchEl?.value || "").trim();
+    if(q){ params.set("search", q); }
+    const cacheKey = params.toString();
+    if(cache.has(cacheKey)){
+      renderArticles(cache.get(cacheKey));
+      setStatus("Cached");
+      return;
     }
-    const payload = await res.json();
-    const articles = payload?.articles ?? [];
-    cache.set(ck, articles);
-    render(articles);
-    setStatus(`Showing ${articles.length} article(s).`);
+    const url = LAMBDA_URL + "?" + params.toString();
+    const resp = await fetch(url, { mode: "cors" });
+    if(!resp.ok){ throw new Error(`HTTP ${resp.status}`); }
+    const data = await resp.json();
+    const articles = data.articles || [];
+    cache.set(cacheKey, articles);
+    renderArticles(articles);
+    setStatus(`Loaded ${articles.length} article(s).`);
   }catch(err){
-    setStatus(`Failed to fetch: ${err.message}`, true);
+    setStatus(`Failed: ${err.message}`, true);
   }finally{
     fetchBtn.disabled = false;
   }
 }
 
-// UX sugar: Enter in search triggers fetch
-searchEl.addEventListener("keydown", (e)=>{
-  if(e.key==="Enter"){ fetchArticles(); }
-});
+searchEl.addEventListener("keydown", e=>{ if(e.key==="Enter"){ fetchArticles(); } });
 fetchBtn.addEventListener("click", fetchArticles);
-
-// Initial load (country=us)
 window.addEventListener("DOMContentLoaded", fetchArticles);
