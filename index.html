@@ -13,10 +13,14 @@
   <div class="wrap">
     <header class="top glass">
       <div class="brand">
-        <div class="logo">🗞️</div>
-        <div>
+        <div class="titles">
           <h1>News & Sentiment</h1>
-          <p class="muted">Top stories + vibes (VADER) — powered by your Lambda</p>
+          <ul class="intro-list">
+  <li>🌍 Browse the latest <strong>headlines by country</strong> or <strong>search any keyword</strong>.</li>
+  <li>🧠 Sentiment powered by <strong>VADER</strong> (rule-based) and <strong>DistilBERT</strong> (deep learning).</li>
+  <li>⚡ Deployed serverlessly with <strong>AWS Lambda</strong> + <strong>API Gateway</strong> for speed & scale.</li>
+  <li>✨ A seamless, <strong>cloud-native experience</strong> that lets you focus on the stories, not the setup.</li>
+</ul>
         </div>
       </div>
 
@@ -24,7 +28,7 @@
         <div class="control">
           <label for="country">Country</label>
           <select id="country">
-            <option value="us">United States</option>
+            <option value="us" selected>United States</option>
             <option value="gb">United Kingdom</option>
             <option value="in">India</option>
             <option value="ca">Canada</option>
@@ -49,37 +53,44 @@
       </div>
     </header>
 
-    <div id="status" class="status"></div>
+    <div id="status" class="status">Ready</div>
 
-    <main id="grid" class="grid"></main>
+    <section id="grid" class="grid"></section>
 
-    <footer class="foot">
-      <div class="muted">
-        Pro tip: leaving Search empty uses the selected country.
-      </div>
-    </footer>
+    <div class="foot">
+      <a class="btn" href="https://rpxcjq2y8j.wixsite.com/my-site-1" target="_blank" rel="noopener">
+        Visit Author’s Website
+      </a>
+    </div>
   </div>
 
   <template id="cardTpl">
     <article class="card glass">
-      <div class="card-top">
-        <span class="badge sentiment">NEUTRAL</span>
-        <span class="chip">DistilBERT: <strong class="distil-label">PENDING</strong> <span class="distil-score"></span></span>
-      </div>
-
       <a class="title" target="_blank" rel="noopener"></a>
-
       <div class="meta">
         <span class="source"></span>
         <span class="dot">•</span>
-        <span class="date"></span>
+        <span class="time"></span>
       </div>
 
+      <!-- VADER -->
       <div class="meter-wrap" title="VADER compound score">
-        <div class="meter">
-          <div class="meter-fill"></div>
+        <span class="meter-label">VADER</span>
+        <div class="meter split">
+          <div class="pos-fill"></div>
+          <div class="neg-fill"></div>
         </div>
-        <span class="meter-val">0.000</span>
+        <span class="meter-val">P: 0% · N: 0%</span>
+      </div>
+
+      <!-- DistilBERT -->
+      <div class="meter-wrap" title="DistilBERT sentiment">
+        <span class="meter-label">DistilBERT</span>
+        <div class="meter split">
+          <div class="pos-fill bert-pos"></div>
+          <div class="neg-fill bert-neg"></div>
+        </div>
+        <span class="meter-val bert-val">P: 0% · N: 0%</span>
       </div>
     </article>
   </template>
