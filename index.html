@@ -57,6 +57,59 @@
 
     <section id="grid" class="grid"></section>
 
+
+  <!-- EXPLAINERS: sticky at bottom, visible on load -->
+  <div id="explainer-row" class="explainer-row" aria-label="Model explainers">
+    <!-- mobile arrows -->
+    <button class="explainer-nav prev" aria-label="Previous explainer" tabindex="0">❮</button>
+    <button class="explainer-nav next" aria-label="Next explainer" tabindex="0">❯</button>
+
+    <div class="explainer-track" id="explainer-track" role="group" aria-roledescription="carousel">
+      <!-- VADER -->
+      <article class="explainer-card" aria-label="VADER Explained">
+        <header class="explainer-header">
+          <span class="pill pill-vader">VADER</span>
+          <h3>Compound Score — the quick vibe meter</h3>
+        </header>
+        <div class="explainer-media">
+          <video controls playsinline preload="metadata"
+                 src="videos/Vader_Explained.mp4"
+                 poster="" aria-label="VADER explained video"></video>
+        </div>
+        <ul class="explainer-bullets">
+          <li>Lexicon + rules: simple, fast, <em>no training needed</em>.</li>
+          <li>Good words ➜ <strong>add</strong> points; bad words ➜ <strong>subtract</strong>.</li>
+          <li>Negation flips (“not good”), intensifiers boost (“very good”).</li>
+          <li>Understands emojis & slang (“lol”, “🔥”).</li>
+          <li>Outputs pos/neu/neg and a <strong>compound</strong> score in [-1, 1].</li>
+        </ul>
+      </article>
+
+      <!-- DistilBERT -->
+      <article class="explainer-card" aria-label="DistilBERT Explained">
+        <header class="explainer-header">
+          <span class="pill pill-distill">DistilBERT</span>
+          <h3>Lightweight Transformer — smart & speedy</h3>
+        </header>
+        <div class="explainer-media">
+          <video controls playsinline preload="metadata"
+                 src="videos/DistillBert_Explained.mp4"
+                 poster="" aria-label="DistilBERT explained video"></video>
+        </div>
+        <ul class="explainer-bullets">
+          <li><strong>Smaller BERT</strong>: distilled to run faster with fewer params.</li>
+          <li>Understands context via self-attention (subword tokens).</li>
+          <li>Great for on-the-go inference (Lambda, CPUs).</li>
+          <li>Fine-tune for domains; zero-shot works surprisingly well.</li>
+          <li>Pairs nicely with VADER for <em>speed + depth</em>.</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+
+
+</section>
+
     <div class="foot">
       <a class="btn" href="https://rpxcjq2y8j.wixsite.com/my-site-1" target="_blank" rel="noopener">
         Visit Author’s Website
@@ -96,5 +149,38 @@
   </template>
 
   <script src="app.js"></script>
+
+<script>
+(function(){
+  const track = document.getElementById('explainer-track');
+  const prevBtn = document.querySelector('.explainer-nav.prev');
+  const nextBtn = document.querySelector('.explainer-nav.next');
+
+  function scrollByCard(dir = 1) {
+    if (!track) return;
+    const card = track.querySelector('.explainer-card');
+    if (!card) return;
+    const gap = 12;
+    const delta = (card.getBoundingClientRect().width + gap) * dir;
+    track.scrollBy({ left: delta, behavior: 'smooth' });
+  }
+
+  prevBtn && prevBtn.addEventListener('click', ()=>scrollByCard(-1));
+  nextBtn && nextBtn.addEventListener('click', ()=>scrollByCard(1));
+
+  function equalizeHeights() {
+    if (!track) return;
+    const cards = Array.from(track.querySelectorAll('.explainer-card'));
+    cards.forEach(c => c.style.height = 'auto');
+    if (window.matchMedia('(min-width: 769px)').matches) {
+      const maxH = Math.max(...cards.map(c => c.getBoundingClientRect().height));
+      cards.forEach(c => c.style.height = Math.ceil(maxH) + 'px');
+    }
+  }
+  window.addEventListener('load', equalizeHeights);
+  window.addEventListener('resize', equalizeHeights);
+})();
+</script>
+
 </body>
 </html>
